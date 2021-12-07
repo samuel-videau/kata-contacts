@@ -3,7 +3,7 @@ const open = require('sqlite').open
 const fs = require('fs')
 
 const filename = 'contacts.sqlite3'
-const numContacts = 3 // TODO: read from process.argv
+const numContacts = 100000 // TODO: read from process.argv
 
 const shouldMigrate = !fs.existsSync(filename)
 
@@ -12,11 +12,12 @@ const shouldMigrate = !fs.existsSync(filename)
  * one at a time
  *
  */
-function * generateContacts () {
- // TODO
-  yield [`name-1`, `email-1@domain.tld`]
-  yield [`name-2`, `email-2@domain.tld`]
-  yield [`name-3`, `email-3@domain.tld`]
+function * generateContacts (numContacts) {
+  let i = 1
+  while (i <= numContacts) {
+    yield [i, `name-${i}`, `email-${i}@domain.tld`]
+    i++
+  }
 }
 
 const migrate = async (db) => {
@@ -27,13 +28,37 @@ const migrate = async (db) => {
           name TEXT NOT NULL,
           email TEXT NOT NULL
          )
-     `)
+     `);
+  await db.exec('CREATE UNIQUE INDEX index_contacts_email ON contacts(email);');
   console.log('Done migrating db')
 }
 
 const insertContacts = async (db) => {
-  console.log('Inserting contacts ...')
-  // TODO
+  console.log('Inserting contacts ...');
+  const contacts = generateContacts(numContacts);
+  let contactsLeft = numContacts;
+
+  while(contactsLeft > 0) {
+    const contactsInfos = [];
+
+    let contactsToAdd = 10000;
+    if (contactsLeft < contactsToAdd) contactsToAdd = contactsLeft;
+
+    let query = `INSERT INTO contacts VALUES `;
+    for (let j = 0; j < contactsToAdd; j++) {
+      contactsInfos.push(...contacts.next().value);
+      query += `(?, ?, ?)`;
+      if (j + 1  !== contactsToAdd) {
+        query += ', ';
+      }
+    }
+    query += ';';
+    await db.run(query, contactsInfos);
+
+    contactsLeft -= contactsToAdd;
+
+    console.log('contacts Left = ' + contactsLeft);
+  }
 }
 
 const queryContact = async (db) => {
@@ -44,8 +69,8 @@ const queryContact = async (db) => {
     process.exit(1)
   }
   const end = Date.now()
-  const elapsed = (end - start) / 1000
-  console.log(`Query took ${elapsed} seconds`)
+  const elapsed = (end - start)
+  console.log(`Query took ${elapsed} ms`)
 }
 
 (async () => {

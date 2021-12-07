@@ -58,13 +58,13 @@ System.out.format("Query took %f seconds\n", elapsed / 1000.0);
 
 | size    | time (in ms) |
 |---------|--------------|
-| 10      | ...          |
-| 100     | ...          |
-| 10000   | ...          |
-| 10,000  | ...          |
-| 50,000  | ...          |
-| 100,000 | ...          |
-| ...     | ...          |
+| 10      | 1          |
+| 100     | 1          |
+| 1000   | 1          |
+| 10,000  | 1          |
+| 50,000  | 5          |
+| 100,000 | 11          |
+| 1,000,000     | 78          |
 
 
 
@@ -85,3 +85,13 @@ CREATE UNIQUE INDEX index_contacts_email ON contacts(email);
 ```
 
 Make a graph for the new result. Does it match what you would expect ?
+
+| size    | time (in ms) |
+|---------|--------------|
+| 10      | 0          |
+| 100     | 0          |
+| 1000   | 0          |
+| 10,000  | 0          |
+| 50,000  | 0          |
+| 100,000 | 0         |
+| 1,000,000     | 0         |
